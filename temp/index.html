@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Pyodide Python3 Demo</title>
+  </head>
+  <body>
+    <h2>Python 3 在线运行示例（基于 Pyodide）</h2>
+    <textarea id="code" rows="10" cols="60">
+print("Hello from Python 3!")
+for i in range(3):
+    print(i)
+  </textarea
+    ><br />
+    <button onclick="runPython()">运行</button>
+    <pre id="output"></pre>
+
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.25.1/full/pyodide.js"></script>
+    <script>
+      let pyodideReady = loadPyodide()
+
+      async function runPython() {
+        const pyodide = await pyodideReady
+        const code = document.getElementById('code').value
+        try {
+          const result = await pyodide.runPythonAsync(code)
+          document.getElementById('output').innerText = result ?? '(无输出)'
+        } catch (err) {
+          document.getElementById('output').innerText = '错误: ' + err
+        }
+      }
+    </script>
+  </body>
+</html>
