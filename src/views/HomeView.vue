@@ -97,7 +97,32 @@
     <!-- Footer -->
     <footer class="footer">
       <div class="footer-content">
-        <p class="copyright">Copyright © 2025 Jack Zhang</p>
+        <p class="copyright">
+          Copyright © 2025 Jack Zhang &nbsp;&nbsp;
+          <el-tooltip
+            class="box-item"
+            effect="dark"
+            content="程序源码地址"
+            placement="top"
+          >
+            <span @click="openGithub()" style="cursor: pointer">
+              <svg
+                height="28"
+                aria-hidden="true"
+                viewBox="0 0 16 16"
+                version="1.1"
+                width="28"
+                data-view-component="true"
+                className="octicon octicon-mark-github v-align-middle"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"
+                ></path>
+              </svg>
+            </span>
+          </el-tooltip>
+        </p>
       </div>
     </footer>
   </div>
@@ -107,8 +132,9 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import * as monaco from 'monaco-editor'
 import { loadPyodide } from 'pyodide'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessageBox } from 'element-plus'
 import { codeSamplesList } from '@/tools/baseDic'
+import { message } from 'ant-design-vue'
 
 // Reactive data
 const editorContainer = ref(null)
@@ -122,17 +148,17 @@ let pyodide: any = null
 // Default Python code
 const defaultCode = codeSamplesList[0].code
 //#region 全局loading控制
-let loadingMessage: any = null
-const openLoading = (info = '') => {
+const loadingKey = 'loadingKey'
+const openLoading = (info = '加载中') => {
   pageLoading.value = true
-  loadingMessage = ElMessage({
-    message: info || '加载中...',
-    type: 'primary',
-    duration: 0,
-  })
+  message.loading({ content: `${info}...`, key: loadingKey })
 }
-const closeLoading = () => {
-  loadingMessage.close()
+const closeLoading = (info = '加载成功', type: 'success' | 'error' = 'success') => {
+  if (type == 'success') {
+    message.success({ content: `${info}`, key: loadingKey, duration: 2 })
+  } else {
+    message.error({ content: `${info}`, key: loadingKey, duration: 2 })
+  }
   pageLoading.value = false
 }
 //#endregion
@@ -185,18 +211,13 @@ const initPyodide = async () => {
       pyodide.registerJsModule('js_input', {
         getUserInput: getUserInput,
       })
-      ElMessage.success('编译环境初始化成功')
+      closeLoading('编译环境初始化完成')
     })
     .catch((err) => {
       console.error('Failed to load Pyodide:', err)
       error.value = '编译环境初始化失败，请刷新页面重试'
-      ElMessage.warning(error.value)
+      closeLoading('编译环境初始化失败')
     })
-    .finally(() => {
-      console.log('yy')
-      closeLoading()
-    })
-  console.log('22', 22)
 }
 
 // 在 JS 侧定义一个提供输入的函数（可弹窗或通过 input 元素）
@@ -283,7 +304,6 @@ const selectedSample = ref(DefaultCodeValue)
 
 // 加载样例代码
 const loadSample = (value: string) => {
-  console.log('value-->', value)
   if (value) {
     if (editor) {
       const code = codeSamplesList.find((item) => item.value === value)?.code ?? ''
@@ -296,6 +316,10 @@ const loadSample = (value: string) => {
   }
 }
 //#endregion
+
+const openGithub = () => {
+  window.open('https://github.com/JACK-ZHANG-coming/python-web-editor')
+}
 
 // Lifecycle hooks
 onMounted(() => {
@@ -746,38 +770,17 @@ onUnmounted(() => {
   }
 
   .footer-content {
+    display: flex;
+    justify-content: center;
+    align-items: center;
     max-width: 1200px;
     margin: 0 auto;
     padding: 0 1rem;
     text-align: center;
 
-    .color-bar {
-      display: flex;
-      justify-content: center;
-      gap: 0;
-      margin-bottom: 1rem;
-      height: 4px;
-
-      .color-segment {
-        flex: 1;
-        max-width: 200px;
-
-        &.red {
-          background: #dc3545;
-        }
-        &.blue {
-          background: #007bff;
-        }
-        &.green {
-          background: #28a745;
-        }
-        &.yellow {
-          background: #ffc107;
-        }
-      }
-    }
-
     .copyright {
+      display: flex;
+      align-items: center;
       color: #6c757d;
       font-size: 0.85rem;
       margin: 0;
