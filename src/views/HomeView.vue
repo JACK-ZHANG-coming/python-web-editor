@@ -1,12 +1,5 @@
 <template>
-  <div
-    v-loading="pageLoading"
-    element-loading-text="正在初始化编译环境（首次初始化会慢一些，大概需要30秒左右）..."
-    :element-loading-spinner="svg"
-    element-loading-svg-view-box="-10, -10, 50, 50"
-    element-loading-background="rgba(255, 255, 255, 0.5)"
-    class="python-ide"
-  >
+  <div class="python-ide">
     <!-- Header -->
     <header class="header">
       <div class="header-content">
@@ -27,20 +20,28 @@
           <div class="header-left">
             <span class="language-label">Python3 源代码:</span>
             <div class="sample-selector">
-              <select v-model="selectedSample" @change="loadSample" class="sample-select">
-                <option value="">选择代码样例</option>
-                <option value="branch">样例1：分支语句</option>
-                <option value="for-loop">样例2：for循环</option>
-                <option value="while-loop">样例3：while循环</option>
-                <option value="function">样例4：函数定义</option>
-                <option value="sum">样例5：累计求和</option>
-                <option value="fibonacci">样例6：斐波那契数列</option>
-                <option value="list-operations">样例7：列表操作</option>
-              </select>
+              <el-select
+                v-model="selectedSample"
+                :disabled="pageLoading"
+                class="sample-select"
+                @change="loadSample"
+              >
+                <el-option
+                  v-for="(item, index) in codeSamplesList"
+                  :key="index"
+                  :label="item.label"
+                  :value="item.value"
+                />
+              </el-select>
             </div>
           </div>
           <div class="header-right">
-            <el-button color="#28a745" @click="runCode" :loading="isRunning">
+            <el-button
+              color="#28a745"
+              @click="runCode"
+              :disabled="pageLoading"
+              :loading="isRunning"
+            >
               <span class="icon">▶</span>
               <span class="btn-text">{{ isRunning ? '运行中' : '运行' }}</span>
             </el-button>
@@ -73,17 +74,20 @@
     <!-- Mobile Run Button -->
     <div class="mobile-run-container">
       <div class="mobile-controls">
-        <select v-model="selectedSample" @change="loadSample" class="mobile-sample-select">
-          <option value="">选择样例</option>
-          <option value="branch">分支语句</option>
-          <option value="for-loop">for循环</option>
-          <option value="while-loop">while循环</option>
-          <option value="function">函数定义</option>
-          <option value="sum">累计求和</option>
-          <option value="fibonacci">斐波那契数列</option>
-          <option value="list-operations">列表操作</option>
-        </select>
-        <button class="mobile-run-btn" @click="runCode" :disabled="isRunning">
+        <el-select
+          v-model="selectedSample"
+          :disabled="pageLoading"
+          class="mobile-sample-select"
+          @change="loadSample"
+        >
+          <el-option
+            v-for="(item, index) in codeSamplesList"
+            :key="index"
+            :label="item.label"
+            :value="item.value"
+          />
+        </el-select>
+        <button class="mobile-run-btn" @click="runCode" :disabled="isRunning || pageLoading">
           <span class="icon">▶</span>
           {{ isRunning ? '运行中...' : '点击运行' }}
         </button>
@@ -103,19 +107,9 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import * as monaco from 'monaco-editor'
 import { loadPyodide } from 'pyodide'
-import { ElMessageBox } from 'element-plus'
-import { codeSamples } from '@/tools/baseDic'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { codeSamplesList } from '@/tools/baseDic'
 
-const svg = `
-        <path class="path" d="
-          M 30 15
-          L 28 17
-          M 25.61 25.61
-          A 15 15, 0, 0, 1, 15 30
-          A 15 15, 0, 1, 1, 27.99 7.5
-          L 15 15
-        " style="stroke-width: 4px; fill: rgba(0, 0, 0, 0)"/>
-      `
 // Reactive data
 const editorContainer = ref(null)
 const output = ref('')
@@ -126,9 +120,22 @@ let editor: any = null
 let pyodide: any = null
 
 // Default Python code
-const defaultCode = `#!/usr/bin/python3
-print("啦啦啦， 开始写代码啦~")
-`
+const defaultCode = codeSamplesList[0].code
+//#region 全局loading控制
+let loadingMessage: any = null
+const openLoading = (info = '') => {
+  pageLoading.value = true
+  loadingMessage = ElMessage({
+    message: info || '加载中...',
+    type: 'primary',
+    duration: 0,
+  })
+}
+const closeLoading = () => {
+  loadingMessage.close()
+  pageLoading.value = false
+}
+//#endregion
 
 // Initialize Monaco Editor
 const initEditor = () => {
@@ -170,19 +177,26 @@ const initEditor = () => {
 
 // Initialize Pyodide
 const initPyodide = async () => {
-  try {
-    pyodide = await loadPyodide()
-    // 注册给 Pyodide 使用
-    pyodide.registerJsModule('js_input', {
-      getUserInput: getUserInput,
+  console.log('11', 11)
+  loadPyodide()
+    .then((res) => {
+      console.log('xx')
+      pyodide = res
+      pyodide.registerJsModule('js_input', {
+        getUserInput: getUserInput,
+      })
+      ElMessage.success('编译环境初始化成功')
     })
-    console.log('Pyodide loaded successfully')
-    pageLoading.value = false
-  } catch (err) {
-    console.error('Failed to load Pyodide:', err)
-    error.value = 'Pyodide加载失败，请刷新页面重试'
-    pageLoading.value = false
-  }
+    .catch((err) => {
+      console.error('Failed to load Pyodide:', err)
+      error.value = '编译环境初始化失败，请刷新页面重试'
+      ElMessage.warning(error.value)
+    })
+    .finally(() => {
+      console.log('yy')
+      closeLoading()
+    })
+  console.log('22', 22)
 }
 
 // 在 JS 侧定义一个提供输入的函数（可弹窗或通过 input 元素）
@@ -264,25 +278,28 @@ const clearOutput = () => {
 }
 
 //#region 样例代码操作
-const selectedSample = ref('')
+const DefaultCodeValue = codeSamplesList[0].value
+const selectedSample = ref(DefaultCodeValue)
 
 // 加载样例代码
-const loadSample = () => {
-  if (selectedSample.value && codeSamples[selectedSample.value]) {
+const loadSample = (value: string) => {
+  console.log('value-->', value)
+  if (value) {
     if (editor) {
-      editor.setValue(codeSamples[selectedSample.value])
+      const code = codeSamplesList.find((item) => item.value === value)?.code ?? ''
+      editor.setValue(code)
       editor.focus()
     }
   } else {
     // 重置选择框
-    selectedSample.value = ''
+    selectedSample.value = DefaultCodeValue
   }
 }
 //#endregion
 
 // Lifecycle hooks
 onMounted(() => {
-  pageLoading.value = true
+  openLoading('正在初始化编译环境（首次初始化会慢一些，大概需要30秒左右）...')
   initEditor()
   setTimeout(() => {
     initPyodide()
@@ -363,6 +380,7 @@ onUnmounted(() => {
   flex: 1;
   display: flex;
   max-width: 1200px;
+  max-height: calc(100vh - 160px);
   margin: 1rem auto;
   padding: 0 1rem;
   gap: 1rem;
@@ -393,7 +411,6 @@ onUnmounted(() => {
     align-items: center;
 
     @media (max-width: 768px) {
-      height: 87px;
       flex-direction: column;
       gap: 0.75rem;
       align-items: stretch;
@@ -404,6 +421,7 @@ onUnmounted(() => {
       align-items: center;
       gap: 1rem;
       flex-wrap: wrap;
+      flex: 0.9;
 
       @media (max-width: 768px) {
         flex-direction: column;
@@ -423,14 +441,19 @@ onUnmounted(() => {
       }
 
       .sample-selector {
+        width: calc(100% - 135px);
+        @media (max-width: 830px) {
+          width: calc(100% - 155px);
+        }
+        @media (max-width: 768px) {
+          display: none;
+        }
         .sample-select {
-          padding: 0.4rem 0.8rem;
-          border: 1px solid #ddd;
           border-radius: 4px;
           font-size: 0.85rem;
           background: white;
           cursor: pointer;
-          min-width: 150px;
+          min-width: 100px;
 
           @media (max-width: 768px) {
             width: 100%;
@@ -668,8 +691,7 @@ onUnmounted(() => {
 
     .mobile-sample-select {
       flex: 1;
-      padding: 0.75rem;
-      border: 1px solid #ddd;
+      padding: 0 2rem 0 0;
       border-radius: 6px;
       font-size: 0.9rem;
       background: white;

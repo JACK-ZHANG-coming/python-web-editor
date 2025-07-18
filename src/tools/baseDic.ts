@@ -1,5 +1,9 @@
 // 代码样例定义
 const codeSamples: any = {
+  ['选择代码样例']: `
+
+  `,
+
   ['branch']: `#!/usr/bin/python3
 # 分支语句样例
 
@@ -504,4 +508,73 @@ print(f"    平均分: {sum(grades)/len(grades):.2f}")
 print(f"    及格人数: {len([g for g in grades if g >= 80])}")`,
 }
 
-export { codeSamples }
+const codeSamplesList = [
+  {
+    label: '默认代码样例',
+    value: '默认代码样例',
+    code: `# 打印一条消息
+print("啦啦啦， 开始写代码啦~")
+`
+  },
+  {
+    label: '分支语句样例',
+    value: '分支语句样例',
+    code: `#!/usr/bin/python3
+# 分支语句样例
+
+# 获取用户输入
+age = input("请输入您的年龄: ")
+
+try:
+    age = int(age)
+
+    # 多重分支判断
+    if age < 0:
+        print("年龄不能为负数！")
+    elif age < 13:
+        print("您是儿童")
+    elif age < 20:
+        print("您是青少年")
+    elif age < 60:
+        print("您是成年人")
+    else:
+        print("您是老年人")
+
+    # 嵌套分支
+    if age >= 18:
+        print("您已成年，可以：")
+        if age >= 21:
+            print("- 在美国可以饮酒")
+        if age >= 25:
+            print("- 租车更便宜")
+        print("- 投票")
+        print("- 签署合同")
+    else:
+        print("您未成年，需要监护人同意某些事项")
+
+except ValueError:
+    print("请输入有效的数字！")`
+  },
+  {
+    label: 'for循环样例',
+    value: 'for循环样例',
+    code: `#!/usr/bin/python3
+# for循环样例
+
+# 打印数字1到5
+for i in range(1, 6):
+    print(i)
+
+# 打印列表中的元素
+fruits = ["苹果", "香蕉", " Cherry"]
+for fruit in fruits:
+    print(fruit)
+
+# 打印字符串中的字符
+for char in "Hello":
+    print(char)
+`
+  },
+]
+
+export { codeSamples, codeSamplesList }
