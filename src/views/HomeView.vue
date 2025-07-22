@@ -99,12 +99,7 @@
       <div class="footer-content">
         <p class="copyright">
           Copyright © 2025 Jack Zhang &nbsp;&nbsp;
-          <el-tooltip
-            class="box-item"
-            effect="dark"
-            content="程序源码地址"
-            placement="top"
-          >
+          <el-tooltip class="box-item" effect="dark" content="程序源码地址" placement="top">
             <span @click="openGithub()" style="cursor: pointer">
               <svg
                 height="28"
@@ -151,7 +146,7 @@ const defaultCode = codeSamplesList[0].code
 const loadingKey = 'loadingKey'
 const openLoading = (info = '加载中') => {
   pageLoading.value = true
-  message.loading({ content: `${info}...`, key: loadingKey })
+  message.loading({ content: `${info}...`, key: loadingKey, duration: 0 })
 }
 const closeLoading = (info = '加载成功', type: 'success' | 'error' = 'success') => {
   if (type == 'success') {
@@ -203,7 +198,6 @@ const initEditor = () => {
 
 // Initialize Pyodide
 const initPyodide = async () => {
-  console.log('11', 11)
   loadPyodide()
     .then((res) => {
       console.log('xx')
