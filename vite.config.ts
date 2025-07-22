@@ -26,6 +26,10 @@ export default defineConfig({
   optimizeDeps: {
     exclude: ['pyodide'] // 开发环境排除Pyodide预构建
   },
+  server: {
+    open: true, // 自动打开浏览器
+    host: true // 暴露局域网地址
+  },
   //全局变量
   css: {
     preprocessorOptions: {

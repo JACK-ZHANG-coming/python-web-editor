@@ -580,6 +580,10 @@ onUnmounted(() => {
     flex: none;
   }
 
+  @media (max-height: 525px) {
+    display: none;
+  }
+
   .output-header {
     background: #f8f9fa;
     padding: 0.75rem 1rem;
